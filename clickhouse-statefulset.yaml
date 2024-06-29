@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: clickhouse
 spec:
-  serviceName: clickhouse
+  serviceName: "clickhouse"
   replicas: 1
   selector:
     matchLabels:
@@ -15,17 +15,80 @@ spec:
     spec:
       containers:
       - name: clickhouse
-        image: yandex/clickhouse-server:latest
+        image: clickhouse/clickhouse-server:latest
         ports:
         - containerPort: 9000
+          name: native
+        - containerPort: 8123
+          name: http
         volumeMounts:
-        - name: clickhouse-storage
+        - name: clickhouse-data
           mountPath: /var/lib/clickhouse
+        - name: clickhouse-config
+          mountPath: /etc/clickhouse-server/config.d
+      volumes:
+      - name: clickhouse-config
+        configMap:
+          name: clickhouse-config
   volumeClaimTemplates:
   - metadata:
-      name: clickhouse-storage
+      name: clickhouse-data
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
           storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-config
+data:
+  custom-config.xml: |
+    <yandex>
+        <listen_host>::</listen_host>
+        <users>
+            <admin>
+                <password>admin</password>
+                <networks>
+                    <ip>::/0</ip>
+                </networks>
+                <profile>default</profile>
+                <quota>default</quota>
+            </admin>
+        </users>
+    </yandex>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+spec:
+  selector:
+    app: clickhouse
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: native
+    - port: 8123
+      targetPort: 8123
+      name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse-nodeport
+spec:
+  selector:
+    app: clickhouse
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30900
+      name: native
+    - port: 8123
+      targetPort: 8123
+      nodePort: 31000
+      name: http

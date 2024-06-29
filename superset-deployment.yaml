@@ -17,18 +17,41 @@ spec:
         image: apache/superset:latest
         ports:
         - containerPort: 8088
+          name: web
         env:
-        - name: SUPERSET_WEBSERVER_PORT
-          value: "8088"
+        - name: SUPERSET_SECRET_KEY
+          value: ayon380
+        command:
+        - "/bin/sh"
+        - "-c"
+        - |
+          pip install clickhouse-connect
+          superset db upgrade
+          superset fab create-admin \
+              --username admin \
+              --firstname Superset \
+              --lastname Admin \
+              --email admin@superset.com \
+              --password admin
+          superset init
+          gunicorn --bind  0.0.0.0:8088 \
+              --worker-class gthread \
+              --workers 10 \
+              --timeout 120 \
+              --limit-request-line 0 \
+              --limit-request-field_size 0 \
+              "superset.app:create_app()"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: superset
 spec:
-  ports:
-  - port: 8088
-    targetPort: 8088
-    protocol: TCP
   selector:
     app: superset
+  ports:
+    - protocol: TCP
+      port: 8088
+      targetPort: 8088
+      name: web
+  type: NodePort
