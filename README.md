@@ -1,4 +1,4 @@
-## Overview and Basic Requirements for Deploying ClickHouse and Superset on Kubernetes
+🚀## Overview and Basic Requirements for Deploying ClickHouse and Superset on Kubernetes
 
 ### Overview
 Deploying ClickHouse and Superset on Kubernetes involves setting up persistent storage, configuring services, and ensuring connectivity between the two applications. This guide provides steps to achieve this using Helm charts for deployment and Docker Desktop for the Kubernetes environment.
