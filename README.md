@@ -32,5 +32,4 @@ Deploying ClickHouse and Superset on Kubernetes involves setting up persistent s
 
 ## **Additional Considerations** 📋
 - Ensure Minikube resources are sufficient for running ClickHouse and Superset.
-- Handle any Kubernetes resource conflicts or ownership issues during deployment.
 - Monitor pod statuses and service availability using `kubectl`.
